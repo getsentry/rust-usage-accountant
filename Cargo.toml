@@ -1,8 +1,8 @@
 [package]
 name = "sentry_usage_accountant"
 description = """
-A library the Sentry application uses to account for usage of 
-shared system resources broken down by feature.
+A library the Sentry application uses to account for usage
+of shared system resources broken down by feature.
 """
 license = "Apache-2.0"
 version = "0.1.0"
