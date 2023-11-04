@@ -5,7 +5,7 @@ A library the Sentry application uses to account for usage
 of shared system resources broken down by feature.
 """
 license = "Apache-2.0"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
 
 [dependencies]
