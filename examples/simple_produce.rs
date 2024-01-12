@@ -2,6 +2,7 @@ extern crate sentry_usage_accountant;
 
 use clap::Parser;
 use sentry_usage_accountant::{KafkaConfig, KafkaProducer, Producer};
+use std::collections::HashMap;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -20,7 +21,10 @@ fn main() {
 
     tracing_subscriber::fmt::init();
 
-    let kafka_config = KafkaConfig::new_producer_config(args.bootstrap_server.as_str(), None);
+    let kafka_config = KafkaConfig::new_producer_config(HashMap::from([(
+        "bootstrap.servers".to_string(),
+        args.bootstrap_server.to_string(),
+    )]));
     let mut producer = KafkaProducer::new(kafka_config);
 
     let _ = producer.send("test_topic", "{a:1}".as_bytes());
