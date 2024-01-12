@@ -27,15 +27,9 @@ pub struct KafkaConfig {
 
 impl KafkaConfig {
     pub fn new_producer_config(
-        bootstrap_servers: &str,
-        override_params: Option<HashMap<String, String>>,
+        config: HashMap<String, String>,
     ) -> Self {
-        let mut config_map: HashMap<String, String> = HashMap::new();
-        config_map.insert("bootstrap.servers".to_string(), bootstrap_servers.into());
-
-        let config = Self { config_map };
-
-        apply_override_params(config, override_params)
+        Self { config_map: config }
     }
 }
 
@@ -47,21 +41,6 @@ impl From<KafkaConfig> for RdKafkaConfig {
         }
         config_obj
     }
-}
-
-fn apply_override_params<V>(
-    mut config: KafkaConfig,
-    override_params: Option<HashMap<String, V>>,
-) -> KafkaConfig
-where
-    V: Into<String>,
-{
-    if let Some(params) = override_params {
-        for (param, value) in params {
-            config.config_map.insert(param, value.into());
-        }
-    }
-    config
 }
 
 struct CaptureErrorContext;
