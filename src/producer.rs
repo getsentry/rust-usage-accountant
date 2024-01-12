@@ -26,9 +26,7 @@ pub struct KafkaConfig {
 }
 
 impl KafkaConfig {
-    pub fn new_producer_config(
-        config: HashMap<String, String>,
-    ) -> Self {
+    pub fn new_producer_config(config: HashMap<String, String>) -> Self {
         Self { config_map: config }
     }
 }
@@ -133,11 +131,12 @@ mod tests {
     #[test]
     fn test_build_producer_configuration() {
         let config = KafkaConfig::new_producer_config(
-            "localhost:9092",
-            Some(HashMap::from([(
+            HashMap::from([
+                ("bootstrap.servers".to_string(), "localhost:9092".to_string()),
+                (
                 "queued.max.messages.kbytes".to_string(),
                 "1000000".to_string(),
-            )])),
+            )]),
         );
 
         let rdkafka_config: RdKafkaConfig = config.into();
