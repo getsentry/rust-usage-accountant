@@ -130,14 +130,16 @@ mod tests {
 
     #[test]
     fn test_build_producer_configuration() {
-        let config = KafkaConfig::new_producer_config(
-            HashMap::from([
-                ("bootstrap.servers".to_string(), "localhost:9092".to_string()),
-                (
+        let config = KafkaConfig::new_producer_config(HashMap::from([
+            (
+                "bootstrap.servers".to_string(),
+                "localhost:9092".to_string(),
+            ),
+            (
                 "queued.max.messages.kbytes".to_string(),
                 "1000000".to_string(),
-            )]),
-        );
+            ),
+        ]));
 
         let rdkafka_config: RdKafkaConfig = config.into();
         assert_eq!(
