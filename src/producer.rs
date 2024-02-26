@@ -79,6 +79,16 @@ pub trait Producer {
     fn send(&mut self, topic_name: &str, payload: &[u8]) -> Result<(), ClientError>;
 }
 
+impl<T, P> Producer for T
+where
+    T: std::ops::DerefMut<Target = P>,
+    P: Producer + ?Sized,
+{
+    fn send(&mut self, topic_name: &str, payload: &[u8]) -> Result<(), ClientError> {
+        (**self).send(topic_name, payload)
+    }
+}
+
 pub struct KafkaProducer {
     producer: ThreadedProducer<CaptureErrorContext>,
 }
@@ -125,6 +135,7 @@ mod tests {
     use super::Producer;
     use rdkafka::config::ClientConfig as RdKafkaConfig;
     use std::cell::RefCell;
+    use std::cell::RefMut;
     use std::collections::HashMap;
     use std::rc::Rc;
 
@@ -146,6 +157,16 @@ mod tests {
             rdkafka_config.get("queued.max.messages.kbytes"),
             Some("1000000")
         );
+    }
+
+    #[test]
+    fn test_smart_pointer_producer_compiles() {
+        fn produce<P: Producer>() {}
+
+        produce::<Box<dyn Producer>>();
+        produce::<Box<DummyProducer>>();
+        produce::<RefMut<dyn Producer>>();
+        produce::<RefMut<DummyProducer>>();
     }
 
     #[test]
