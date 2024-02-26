@@ -53,9 +53,12 @@
 
 pub mod accountant;
 mod accumulator;
+#[cfg(feature = "kafka")]
+mod kafka;
 mod producer;
 
 pub use accountant::UsageAccountant;
+#[cfg(feature = "kafka")]
+pub use kafka::*;
 #[doc(inline)]
-pub use accumulator::UsageUnit;
-pub use producer::{KafkaConfig, KafkaProducer, Producer};
+pub use producer::*;

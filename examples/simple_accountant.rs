@@ -17,11 +17,14 @@ fn main() {
 
     tracing_subscriber::fmt::init();
 
-    let kafka_config = KafkaConfig::new_producer_config(HashMap::from([(
-        "bootstrap.servers".to_string(),
-        args.bootstrap_server.to_string(),
-    )]));
-    let mut accountant = UsageAccountant::new_with_kafka(kafka_config, None, None);
+    let kafka_config = KafkaConfig {
+        config: HashMap::from([(
+            "bootstrap.servers".to_string(),
+            args.bootstrap_server.to_string(),
+        )]),
+        ..Default::default()
+    };
+    let mut accountant = UsageAccountant::new_with_kafka(kafka_config, None);
 
     accountant
         .record("my_resource", "my_feature", 100, UsageUnit::Bytes)
