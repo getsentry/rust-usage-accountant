@@ -129,7 +129,7 @@ mod tests {
         assert_eq!(m1.shared_resource_id, "resource_1");
         assert_eq!(m1.usage_unit, UsageUnit::Bytes);
 
-        let m2 = &messages[2];
+        let m2 = &messages[1];
         assert_eq!(m2.shared_resource_id, "resource_1");
         assert_eq!(m2.usage_unit, UsageUnit::Bytes);
 

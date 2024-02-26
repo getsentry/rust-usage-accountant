@@ -105,7 +105,7 @@ mod tests {
         assert_eq!(shared_resource_id, "foo");
         assert_eq!(app_feature, "app_feature");
         assert!(matches!(usage_unit, UsageUnit::Bytes));
-        assert_eq!(amount, 1337);
+        assert_eq!(amount, 42);
     }
 
     #[test]
