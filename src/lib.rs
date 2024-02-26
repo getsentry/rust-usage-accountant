@@ -58,4 +58,4 @@ mod producer;
 pub use accountant::UsageAccountant;
 #[doc(inline)]
 pub use accumulator::UsageUnit;
-pub use producer::{KafkaConfig, KafkaProducer, Producer};
+pub use producer::{ClientError, KafkaConfig, KafkaProducer, Producer};
