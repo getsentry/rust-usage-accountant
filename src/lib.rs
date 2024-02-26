@@ -30,7 +30,8 @@
 //!
 //! # Example
 //!
-//! ```
+//! ```no_run
+//! # #[cfg(feature = "kafka")] {
 //! use sentry_usage_accountant::{KafkaConfig, UsageAccountant, UsageUnit};
 //! use std::collections::HashMap;
 //!
@@ -48,6 +49,7 @@
 //!    100,
 //!    UsageUnit::Bytes,
 //! ).unwrap();
+//! # }
 //! ```
 //!
 

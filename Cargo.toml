@@ -34,3 +34,5 @@ required-features = ["kafka"]
 name = "simple_accountant"
 required-features = ["kafka"]
 
+[package.metadata."docs.rs"]
+all-features = true
