@@ -46,6 +46,18 @@ pub trait Producer {
     fn send(&mut self, payload: Message) -> Result<(), Self::Error>;
 }
 
+impl<T, P> Producer for T
+where
+    T: std::ops::DerefMut<Target = P>,
+    P: Producer + ?Sized,
+{
+    type Error = P::Error;
+
+    fn send(&mut self, message: Message) -> Result<(), Self::Error> {
+        (**self).send(message)
+    }
+}
+
 #[cfg(test)]
 #[derive(Debug, Default)]
 pub(crate) struct DummyProducer {
@@ -64,6 +76,8 @@ impl Producer for DummyProducer {
 
 #[cfg(test)]
 mod tests {
+    use std::cell::RefMut;
+
     use super::*;
 
     #[test]
@@ -92,5 +106,15 @@ mod tests {
         assert_eq!(app_feature, "app_feature");
         assert!(matches!(usage_unit, UsageUnit::Bytes));
         assert_eq!(amount, 1337);
+    }
+
+    #[test]
+    fn test_smart_pointer_producer_compiles() {
+        fn produce<P: Producer>() {}
+
+        produce::<Box<dyn Producer<Error = ()>>>();
+        produce::<Box<DummyProducer>>();
+        produce::<RefMut<dyn Producer<Error = ()>>>();
+        produce::<RefMut<DummyProducer>>();
     }
 }
