@@ -1,7 +1,27 @@
 use crate::{accumulator::UsageAccumulator, Producer};
-use crate::{Message, UsageUnit};
 use chrono::{Duration, Utc};
-use std::ops::Drop;
+use serde::{Deserialize, Serialize};
+use std::{fmt, ops::Drop};
+
+/// The unit of measures we support when recording usage.
+/// more can be added.
+#[derive(Clone, Debug, Eq, Hash, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum UsageUnit {
+    Milliseconds,
+    Bytes,
+    BytesSec,
+}
+
+impl fmt::Display for UsageUnit {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            UsageUnit::Milliseconds => write!(f, "milliseconds"),
+            UsageUnit::Bytes => write!(f, "bytes"),
+            UsageUnit::BytesSec => write!(f, "bytes_sec"),
+        }
+    }
+}
 
 /// This is the entry point for the library. It is in most cases
 /// everything you need to instrument your application.
@@ -83,7 +103,9 @@ impl<P: Producer> UsageAccountant<P> {
                 amount,
             };
 
-            self.producer.send(message)?;
+            if let Ok(payload) = serde_json::to_vec(&message) {
+                self.producer.send(payload)?;
+            }
         }
         Ok(())
     }
@@ -91,13 +113,22 @@ impl<P: Producer> UsageAccountant<P> {
 
 impl<P: Producer> Drop for UsageAccountant<P> {
     fn drop(&mut self) {
-        _ = self.flush();
+        let _ = self.flush();
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Message {
+    timestamp: i64,
+    shared_resource_id: String,
+    app_feature: String,
+    usage_unit: UsageUnit,
+    amount: u64,
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{DummyProducer, UsageUnit};
+    use crate::DummyProducer;
 
     use super::*;
 
@@ -125,11 +156,11 @@ mod tests {
         let messages = &accountant.producer.messages;
         assert_eq!(messages.len(), 2);
 
-        let m1 = &messages[0];
+        let m1: Message = serde_json::from_slice(&messages[0]).unwrap();
         assert_eq!(m1.shared_resource_id, "resource_1");
         assert_eq!(m1.usage_unit, UsageUnit::Bytes);
 
-        let m2 = &messages[1];
+        let m2: Message = serde_json::from_slice(&messages[1]).unwrap();
         assert_eq!(m2.shared_resource_id, "resource_1");
         assert_eq!(m2.usage_unit, UsageUnit::Bytes);
 

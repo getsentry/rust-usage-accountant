@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use thiserror::Error;
 use tracing::{event, Level};
 
-use crate::{Message, Producer};
+use crate::Producer;
 
 const DEFAULT_TOPIC_NAME: &str = "shared-resources-usage";
 
@@ -90,9 +90,7 @@ pub enum KafkaProducerError {
 impl Producer for KafkaProducer {
     type Error = KafkaProducerError;
 
-    fn send(&mut self, message: Message) -> Result<(), Self::Error> {
-        // SAFETY: Serializing to JSON cannot fail. The type will always correctly serialize.
-        let payload = serde_json::to_vec(&message).unwrap();
+    fn send(&mut self, payload: Vec<u8>) -> Result<(), Self::Error> {
         let record: BaseRecord<'_, [u8], [u8]> = BaseRecord::to(&self.topic).payload(&payload);
         self.producer
             .send(record)

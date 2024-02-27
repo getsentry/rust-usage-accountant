@@ -53,13 +53,13 @@
 //! ```
 //!
 
-pub mod accountant;
+mod accountant;
 mod accumulator;
 #[cfg(feature = "kafka")]
 mod kafka;
 mod producer;
 
-pub use accountant::UsageAccountant;
+pub use accountant::*;
 #[cfg(feature = "kafka")]
 pub use kafka::*;
 #[doc(inline)]

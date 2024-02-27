@@ -1,7 +1,7 @@
 extern crate sentry_usage_accountant;
 
 use clap::Parser;
-use sentry_usage_accountant::{KafkaConfig, KafkaProducer, Producer, UsageUnit};
+use sentry_usage_accountant::{KafkaConfig, KafkaProducer, Producer};
 use std::collections::HashMap;
 
 #[derive(Parser, Debug)]
@@ -31,12 +31,6 @@ fn main() {
     let mut producer = KafkaProducer::new(kafka_config);
 
     producer
-        .send(sentry_usage_accountant::Message {
-            timestamp: 1337,
-            shared_resource_id: "some_resource".to_owned(),
-            app_feature: "feature".to_owned(),
-            usage_unit: UsageUnit::Bytes,
-            amount: 42,
-        })
+        .send("hello world".as_bytes().to_vec())
         .expect("failed to produce message");
 }
