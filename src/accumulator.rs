@@ -6,30 +6,10 @@
 //!
 
 use chrono::{DateTime, Duration, DurationRound, Utc};
-use serde::Serialize;
 use std::collections::HashMap;
-use std::fmt;
 use std::mem;
 
-/// The unit of measures we support when recording usage.
-/// more can be added.
-#[derive(Clone, Debug, Eq, Hash, PartialEq, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum UsageUnit {
-    Milliseconds,
-    Bytes,
-    BytesSec,
-}
-
-impl fmt::Display for UsageUnit {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            UsageUnit::Milliseconds => write!(f, "milliseconds"),
-            UsageUnit::Bytes => write!(f, "bytes"),
-            UsageUnit::BytesSec => write!(f, "bytes_sec"),
-        }
-    }
-}
+use crate::UsageUnit;
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct UsageKey {

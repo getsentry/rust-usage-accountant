@@ -21,11 +21,16 @@ fn main() {
 
     tracing_subscriber::fmt::init();
 
-    let kafka_config = KafkaConfig::new_producer_config(HashMap::from([(
-        "bootstrap.servers".to_string(),
-        args.bootstrap_server.to_string(),
-    )]));
+    let kafka_config = KafkaConfig {
+        topic: "test_topic".to_owned(),
+        config: HashMap::from([(
+            "bootstrap.servers".to_string(),
+            args.bootstrap_server.to_string(),
+        )]),
+    };
     let mut producer = KafkaProducer::new(kafka_config);
 
-    let _ = producer.send("test_topic", "{a:1}".as_bytes());
+    producer
+        .send("hello world".as_bytes().to_vec())
+        .expect("failed to produce message");
 }

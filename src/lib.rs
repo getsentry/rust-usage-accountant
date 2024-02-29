@@ -30,7 +30,8 @@
 //!
 //! # Example
 //!
-//! ```
+//! ```no_run
+//! # #[cfg(feature = "kafka")] {
 //! use sentry_usage_accountant::{KafkaConfig, UsageAccountant, UsageUnit};
 //! use std::collections::HashMap;
 //!
@@ -48,14 +49,18 @@
 //!    100,
 //!    UsageUnit::Bytes,
 //! ).unwrap();
+//! # }
 //! ```
 //!
 
-pub mod accountant;
+mod accountant;
 mod accumulator;
+#[cfg(feature = "kafka")]
+mod kafka;
 mod producer;
 
-pub use accountant::UsageAccountant;
+pub use accountant::*;
+#[cfg(feature = "kafka")]
+pub use kafka::*;
 #[doc(inline)]
-pub use accumulator::UsageUnit;
-pub use producer::{KafkaConfig, KafkaProducer, Producer};
+pub use producer::*;
