@@ -5,7 +5,7 @@ A library the Sentry application uses to account for usage
 of shared system resources broken down by feature.
 """
 license = "Apache-2.0"
-version = "0.0.4"
+version = "0.1.0"
 edition = "2021"
 documentation = "https://docs.rs/sentry_usage_accountant"
 repository = "https://github.com/getsentry/rust-usage-accountant"
