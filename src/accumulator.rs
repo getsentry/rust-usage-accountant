@@ -51,8 +51,13 @@ impl UsageAccumulator {
         amount: u64,
         usage_unit: UsageUnit,
     ) {
-        let quantized_timestamp: DateTime<Utc> =
-            usage_time.duration_trunc(self.granularity).unwrap();
+        // Check for zero here because of chrono bug, which causes a panic:
+        // https://github.com/chronotope/chrono/pull/1474
+        let quantized_timestamp = if self.granularity.is_zero() {
+            usage_time
+        } else {
+            usage_time.duration_trunc(self.granularity).unwrap()
+        };
 
         if self.first_timestamp.is_none() {
             self.first_timestamp = Some(quantized_timestamp);
@@ -75,9 +80,12 @@ impl UsageAccumulator {
     /// and at least `granularity` seconds have passed since
     /// the first chunk of data was added.
     pub fn should_flush(&self, current_time: DateTime<Utc>) -> bool {
-        return self.first_timestamp.is_some()
-            && self.usage_batch.keys().len() > 0
-            && current_time - self.first_timestamp.unwrap() > self.granularity;
+        let Some(first_timestamp) = self.first_timestamp else {
+            return false;
+        };
+
+        return self.usage_batch.keys().len() > 0
+            && current_time - first_timestamp >= self.granularity;
     }
 
     /// Return the current bucket and clears up the state.
