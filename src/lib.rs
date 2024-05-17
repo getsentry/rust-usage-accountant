@@ -35,12 +35,12 @@
 //! use sentry_usage_accountant::{KafkaConfig, UsageAccountant, UsageUnit};
 //! use std::collections::HashMap;
 //!
-//! let kafka_config = KafkaConfig::new_producer_config(
-//!     HashMap::from([("bootstrap.servers".to_string(), "localhost:9092".to_string())]),
-//! );
+//! let kafka_config = KafkaConfig {
+//!     config: HashMap::from([("bootstrap.servers".to_string(), "localhost:9092".to_string())]),
+//!     ..Default::default()
+//! };
 //! let mut accountant = UsageAccountant::new_with_kafka(
 //!    kafka_config,
-//!    None,
 //!    None,
 //! );
 //! accountant.record(
