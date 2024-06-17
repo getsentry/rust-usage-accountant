@@ -103,9 +103,7 @@ impl<P: Producer> UsageAccountant<P> {
                 amount,
             };
 
-            if let Ok(payload) = serde_json::to_vec(&message) {
-                self.producer.send(payload)?;
-            }
+            self.producer.send(&message)?;
         }
         Ok(())
     }
@@ -117,13 +115,36 @@ impl<P: Producer> Drop for UsageAccountant<P> {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct Message {
-    timestamp: i64,
-    shared_resource_id: String,
-    app_feature: String,
-    usage_unit: UsageUnit,
-    amount: u64,
+/// The usage message to produce.
+#[derive(Debug)]
+#[cfg_attr(test, derive(Deserialize))]
+pub struct Message {
+    pub timestamp: i64,
+    pub shared_resource_id: String,
+    pub app_feature: String,
+    pub usage_unit: UsageUnit,
+    pub amount: u64,
+}
+
+impl Message {
+    pub fn serialize(&self) -> Vec<u8> {
+        let Message {
+            timestamp,
+            shared_resource_id,
+            app_feature,
+            usage_unit,
+            amount,
+        } = self;
+
+        serde_json::to_vec(&serde_json::json!({
+            "timestamp": timestamp,
+            "shared_resource_id": shared_resource_id,
+            "app_feature": app_feature,
+            "usage_unit": usage_unit,
+            "amount": amount,
+        }))
+        .expect("serialization never fails")
+    }
 }
 
 #[cfg(test)]

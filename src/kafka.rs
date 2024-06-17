@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use thiserror::Error;
 use tracing::{event, Level};
 
-use crate::Producer;
+use crate::{Message, Producer};
 
 const DEFAULT_TOPIC_NAME: &str = "shared-resources-usage";
 
@@ -90,11 +90,12 @@ pub enum KafkaProducerError {
 impl Producer for KafkaProducer {
     type Error = KafkaProducerError;
 
-    fn send(&mut self, payload: Vec<u8>) -> Result<(), Self::Error> {
+    fn send(&mut self, message: &Message) -> Result<(), Self::Error> {
+        let payload = message.serialize();
         let record: BaseRecord<'_, [u8], [u8]> = BaseRecord::to(&self.topic).payload(&payload);
         self.producer
             .send(record)
-            .map_err(|(error, _message)| KafkaProducerError::SendFailed(error))
+            .map_err(|(error, _)| KafkaProducerError::SendFailed(error))
     }
 }
 

@@ -5,13 +5,15 @@
 //!
 //! It also simplify unit tests.
 
+use crate::Message;
+
 /// A Producer trait.
 ///
 /// We do not neet to set headers or key for this data.
 pub trait Producer {
     type Error;
 
-    fn send(&mut self, payload: Vec<u8>) -> Result<(), Self::Error>;
+    fn send(&mut self, message: &Message) -> Result<(), Self::Error>;
 }
 
 impl<T, P> Producer for T
@@ -21,7 +23,7 @@ where
 {
     type Error = P::Error;
 
-    fn send(&mut self, payload: Vec<u8>) -> Result<(), Self::Error> {
+    fn send(&mut self, payload: &Message) -> Result<(), Self::Error> {
         (**self).send(payload)
     }
 }
@@ -36,8 +38,8 @@ pub(crate) struct DummyProducer {
 impl Producer for DummyProducer {
     type Error = std::convert::Infallible;
 
-    fn send(&mut self, payload: Vec<u8>) -> Result<(), Self::Error> {
-        self.messages.push(payload);
+    fn send(&mut self, payload: &Message) -> Result<(), Self::Error> {
+        self.messages.push(payload.serialize());
         Ok(())
     }
 }
@@ -46,15 +48,29 @@ impl Producer for DummyProducer {
 mod tests {
     use std::cell::RefMut;
 
+    use crate::UsageUnit;
+
     use super::*;
 
     #[test]
     fn test_dummy_producer() {
         let mut producer = DummyProducer::default();
 
-        producer.send("foo".as_bytes().to_vec()).unwrap();
+        let message = Message {
+            timestamp: 1,
+            shared_resource_id: "foo".to_owned(),
+            app_feature: "bar".to_owned(),
+            usage_unit: UsageUnit::Bytes,
+            amount: 42,
+        };
 
-        assert_eq!(producer.messages.pop().as_deref(), Some("foo".as_bytes()));
+        producer.send(&message).unwrap();
+
+        let expected = r#"{"amount":42,"app_feature":"bar","shared_resource_id":"foo","timestamp":1,"usage_unit":"bytes"}"#;
+        assert_eq!(
+            producer.messages.pop().as_deref(),
+            Some(expected.as_bytes())
+        );
         assert!(producer.messages.is_empty());
     }
 
