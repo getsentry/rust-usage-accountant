@@ -37,7 +37,6 @@ impl fmt::Display for UsageUnit {
 ///
 /// Avoid creating a UsageAccountant every time some data needs to
 /// be recorded.
-
 pub struct UsageAccountant<P: Producer> {
     accumulator: UsageAccumulator,
     producer: P,
