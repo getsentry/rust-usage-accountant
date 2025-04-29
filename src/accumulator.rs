@@ -84,8 +84,7 @@ impl UsageAccumulator {
             return false;
         };
 
-        self.usage_batch.keys().len() > 0
-            && current_time - first_timestamp >= self.granularity
+        self.usage_batch.keys().len() > 0 && current_time - first_timestamp >= self.granularity
     }
 
     /// Return the current bucket and clears up the state.
