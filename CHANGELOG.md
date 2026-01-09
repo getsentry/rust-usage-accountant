@@ -1,3 +1,9 @@
+## 0.1.2
+
+### Build / dependencies / internal 🔧
+
+- (deps) Relax rdkafka range to include 0.38 by @Dav1dde in [#15](https://github.com/getsentry/rust-usage-accountant/pull/15)
+
 ## 0.1.1
 
 ### Various fixes & improvements
