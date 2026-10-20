@@ -1,3 +1,14 @@
+## 0.2.0
+
+### Bug Fixes 🐛
+
+- (ci) Use Python 3.13 for pre-commit and install curl headers by @lvthanh03 in [#19](https://github.com/getsentry/rust-usage-accountant/pull/19)
+
+### Internal Changes 🔧
+
+- (kafka) Migrate rdkafka producer to Arroyo by @lvthanh03 in [#18](https://github.com/getsentry/rust-usage-accountant/pull/18)
+- Pin GitHub Actions to full-length commit SHAs by @joshuarli in [#17](https://github.com/getsentry/rust-usage-accountant/pull/17)
+
 ## 0.1.2
 
 ### Build / dependencies / internal 🔧
