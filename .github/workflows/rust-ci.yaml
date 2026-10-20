@@ -27,6 +27,10 @@ jobs:
       - name: Install rust stable toolchain
         run: rustup toolchain install stable --profile minimal --no-self-update
 
+      # librdkafka's cmake build includes curl/curl.h even with curl disabled.
+      - name: Install curl headers
+        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
+
       - name: Cache rust cargo artifacts
         uses: swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2
 
