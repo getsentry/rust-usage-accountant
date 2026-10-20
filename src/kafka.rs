@@ -1,10 +1,11 @@
-use rdkafka::config::ClientConfig as RdKafkaConfig;
-use rdkafka::producer::{BaseRecord, ThreadedProducer};
-use rdkafka::producer::{DeliveryResult, ProducerContext};
-use rdkafka::ClientContext;
+use sentry_arroyo::backends::kafka::config::KafkaConfig as ArroyoKafkaConfig;
+use sentry_arroyo::backends::kafka::producer::KafkaProducer as ArroyoKafkaProducer;
+use sentry_arroyo::backends::kafka::types::KafkaPayload;
+use sentry_arroyo::backends::{Producer as _, ProducerError};
+use sentry_arroyo::types::{Topic, TopicOrPartition};
 use std::collections::HashMap;
+use std::time::Duration;
 use thiserror::Error;
-use tracing::{event, Level};
 
 use crate::Producer;
 
@@ -28,50 +29,33 @@ impl Default for KafkaConfig {
     }
 }
 
-impl From<&KafkaConfig> for RdKafkaConfig {
+impl From<&KafkaConfig> for ArroyoKafkaConfig {
     fn from(item: &KafkaConfig) -> Self {
-        let mut config_obj = RdKafkaConfig::new();
-        for (key, val) in item.config.iter() {
-            config_obj.set(key, val);
-        }
-        config_obj
+        // bootstrap.servers comes from the config map, which overrides the empty list.
+        ArroyoKafkaConfig::new_config(vec![], Some(item.config.clone()))
     }
 }
 
-struct CaptureErrorContext;
-
-impl ClientContext for CaptureErrorContext {}
-
-impl ProducerContext for CaptureErrorContext {
-    type DeliveryOpaque = ();
-
-    fn delivery(&self, result: &DeliveryResult, _delivery_opaque: Self::DeliveryOpaque) {
-        match result {
-            Ok(_) => {
-                event!(Level::DEBUG, "Message produced.")
-            }
-            Err((kafka_err, _)) => {
-                event!(Level::ERROR, "Message production failed. {}", kafka_err)
-            }
-        }
-    }
-}
-
+/// Produce status metrics are reported by Arroyo
 pub struct KafkaProducer {
-    topic: String,
-    producer: ThreadedProducer<CaptureErrorContext>,
+    topic: Topic,
+    producer: ArroyoKafkaProducer,
 }
 
 impl KafkaProducer {
     pub fn new(config: KafkaConfig) -> KafkaProducer {
-        let producer = RdKafkaConfig::from(&config)
-            .create_with_context(CaptureErrorContext)
-            .expect("Producer creation error");
+        let producer = ArroyoKafkaProducer::new((&config).into()).expect("Producer creation error");
 
         KafkaProducer {
-            topic: config.topic,
+            topic: Topic::new(&config.topic),
             producer,
         }
+    }
+}
+
+impl Drop for KafkaProducer {
+    fn drop(&mut self) {
+        let _ = self.producer.flush_for(Duration::from_secs(1));
     }
 }
 
@@ -80,21 +64,19 @@ impl KafkaProducer {
 pub enum KafkaProducerError {
     /// Failed to send a kafka message.
     #[error("failed to send kafka message")]
-    SendFailed(#[source] rdkafka::error::KafkaError),
-
-    /// Failed to create a kafka producer because of the invalid configuration.
-    #[error("failed to create kafka producer: invalid kafka config")]
-    InvalidConfig(#[source] rdkafka::error::KafkaError),
+    SendFailed(#[source] ProducerError),
 }
 
 impl Producer for KafkaProducer {
     type Error = KafkaProducerError;
 
     fn send(&mut self, payload: Vec<u8>) -> Result<(), Self::Error> {
-        let record: BaseRecord<'_, [u8], [u8]> = BaseRecord::to(&self.topic).payload(&payload);
         self.producer
-            .send(record)
-            .map_err(|(error, _message)| KafkaProducerError::SendFailed(error))
+            .produce(
+                &TopicOrPartition::Topic(self.topic),
+                KafkaPayload::new(None, None, Some(payload)),
+            )
+            .map_err(KafkaProducerError::SendFailed)
     }
 }
 
@@ -118,10 +100,18 @@ mod tests {
             ..Default::default()
         };
 
-        let rdkafka_config = RdKafkaConfig::from(&config);
+        let arroyo_config = ArroyoKafkaConfig::from(&config);
         assert_eq!(
-            rdkafka_config.get("queued.max.messages.kbytes"),
+            arroyo_config
+                .get_config_value("queued.max.messages.kbytes")
+                .map(String::as_str),
             Some("1000000")
+        );
+        assert_eq!(
+            arroyo_config
+                .get_config_value("bootstrap.servers")
+                .map(String::as_str),
+            Some("localhost:9092")
         );
     }
 }
